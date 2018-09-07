@@ -86,7 +86,9 @@ static wsrep_status_t dummy_options_set(
 static char* dummy_options_get (wsrep_t* w)
 {
     WSREP_DBUG_ENTER(w);
-    return strdup(WSREP_DUMMY(w)->options);
+    if (WSREP_DUMMY(w)->options)
+        return strdup(WSREP_DUMMY(w)->options);
+    return NULL;
 }
 
 static wsrep_status_t dummy_connect(
@@ -113,6 +115,17 @@ static wsrep_status_t dummy_recv(wsrep_t* w,
     return WSREP_OK;
 }
 
+static wsrep_status_t dummy_replicate(
+    wsrep_t* w,
+    const wsrep_conn_id_t   conn_id    __attribute__((unused)),
+    wsrep_ws_handle_t*      ws_handle  __attribute__((unused)),
+    uint32_t                flags      __attribute__((unused)),
+    wsrep_trx_meta_t*       meta       __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
 static wsrep_status_t dummy_pre_commit(
     wsrep_t* w,
     const wsrep_conn_id_t   conn_id    __attribute__((unused)),
@@ -124,9 +137,52 @@ static wsrep_status_t dummy_pre_commit(
     return WSREP_OK;
 }
 
+static wsrep_status_t dummy_replicate_pre_commit(
+    wsrep_t* w,
+    const wsrep_conn_id_t   conn_id    __attribute__((unused)),
+    wsrep_ws_handle_t*      ws_handle  __attribute__((unused)),
+    uint32_t                flags      __attribute__((unused)),
+    wsrep_trx_meta_t*       meta       __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
+static wsrep_status_t dummy_interim_commit(
+    wsrep_t* w,
+    wsrep_ws_handle_t*  ws_handle  __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
 static wsrep_status_t dummy_post_commit(
     wsrep_t* w,
     wsrep_ws_handle_t*  ws_handle  __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
+static wsrep_status_t dummy_applier_pre_commit(
+    wsrep_t* w,
+    void*    trx_handle    __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
+static wsrep_status_t dummy_applier_interim_commit(
+    wsrep_t* w,
+    void*    trx_handle    __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
+static wsrep_status_t dummy_applier_post_commit(
+    wsrep_t* w,
+    void*    trx_handle    __attribute__((unused)))
 {
     WSREP_DBUG_ENTER(w);
     return WSREP_OK;
@@ -294,6 +350,13 @@ static void dummy_stats_reset (wsrep_t* w)
     WSREP_DBUG_ENTER(w);
 }
 
+static void dummy_fetch_pfs_info (
+    wsrep_t* w, wsrep_node_info_t* nodes __attribute__((unused)),
+    uint32_t size __attribute__((unused)))
+{
+    WSREP_DBUG_ENTER(w);
+}
+
 static wsrep_seqno_t dummy_pause (wsrep_t* w)
 {
     WSREP_DBUG_ENTER(w);
@@ -354,8 +417,14 @@ static wsrep_t dummy_iface = {
     &dummy_connect,
     &dummy_disconnect,
     &dummy_recv,
+    &dummy_replicate,
     &dummy_pre_commit,
+    &dummy_replicate_pre_commit,
+    &dummy_interim_commit,
     &dummy_post_commit,
+    &dummy_applier_pre_commit,
+    &dummy_applier_interim_commit,
+    &dummy_applier_post_commit,
     &dummy_post_rollback,
     &dummy_replay_trx,
     &dummy_abort_pre_commit,
@@ -373,6 +442,7 @@ static wsrep_t dummy_iface = {
     &dummy_stats_get,
     &dummy_stats_free,
     &dummy_stats_reset,
+    &dummy_fetch_pfs_info,
     &dummy_pause,
     &dummy_resume,
     &dummy_desync,
