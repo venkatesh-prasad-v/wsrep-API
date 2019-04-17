@@ -17,9 +17,9 @@
 /*! @file Helper functions to deal with GTID string representations */
 
 #include <errno.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "wsrep_api.h"
 
@@ -27,40 +27,48 @@
  * Read GTID from string
  * @return length of GTID string representation or -EINVAL in case of error
  */
-int wsrep_gtid_scan(const char *str, size_t str_len, wsrep_gtid_t *gtid) {
-  unsigned int offset;
-  char *endptr;
+int
+wsrep_gtid_scan(const char* str, size_t str_len, wsrep_gtid_t* gtid)
+{
+    unsigned int offset;
+    char* endptr;
 
-  if ((offset = wsrep_uuid_scan(str, str_len, &gtid->uuid)) > 0 &&
-      offset < str_len && str[offset] == ':') {
-    ++offset;
-    if (offset < str_len) {
-      errno = 0;
-      gtid->seqno = strtoll(str + offset, &endptr, 0);
+    if ((offset = wsrep_uuid_scan(str, str_len, &gtid->uuid)) > 0 &&
+        offset < str_len && str[offset] == ':') {
+        ++offset;
+        if (offset < str_len)
+        {
+            errno = 0;
+            gtid->seqno = strtoll(str + offset, &endptr, 0);
 
-      if (errno == 0) {
-        offset = endptr - str;
-        return offset;
-      }
+            if (errno == 0) {
+                offset = endptr - str;
+                return offset;
+            }
+        }
     }
-  }
-  *gtid = WSREP_GTID_UNDEFINED;
-  return -EINVAL;
+    *gtid = WSREP_GTID_UNDEFINED;
+    return -EINVAL;
 }
 
 /*!
  * Write GTID to string
- * @return length of GTID stirng representation of -EMSGSIZE if string is too
+ * @return length of GTID string representation or -EMSGSIZE if string is too
  *         short
  */
-int wsrep_gtid_print(const wsrep_gtid_t *gtid, char *str, size_t str_len) {
-  unsigned int offset, ret;
-  if ((offset = wsrep_uuid_print(&gtid->uuid, str, str_len)) > 0) {
-    ret = snprintf(str + offset, str_len - offset, ":%" PRId64, gtid->seqno);
-    if (ret <= str_len - offset) {
-      return (offset + ret);
-    }
-  }
+int
+wsrep_gtid_print(const wsrep_gtid_t* gtid, char* str, size_t str_len)
+{
+    unsigned int offset, ret;
+    if ((offset = wsrep_uuid_print(&gtid->uuid, str, str_len)) > 0)
+    {
+        ret = snprintf(str + offset, str_len - offset,
+                       ":%" PRId64, gtid->seqno);
+        if (ret <= str_len - offset) {
+            return (offset + ret);
+        }
 
-  return -EMSGSIZE;
+    }
+
+    return -EMSGSIZE;
 }
