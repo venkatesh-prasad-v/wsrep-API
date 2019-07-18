@@ -96,6 +96,8 @@ static int verify(const wsrep_t *wh, const char *iface_ver)
     VERIFY(wh->stats_get);
     VERIFY(wh->stats_free);
     VERIFY(wh->stats_reset);
+    // ---- PXC specific
+    VERIFY(wh->fetch_pfs_info);
     VERIFY(wh->pause);
     VERIFY(wh->resume);
     VERIFY(wh->desync);
