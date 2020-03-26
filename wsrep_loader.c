@@ -225,8 +225,10 @@ void wsrep_unload(wsrep_t *hptr)
     } else {
         if (hptr->free)
             hptr->free(hptr);
+#ifndef USE_VALGRIND
         if (hptr->dlh)
             dlclose(hptr->dlh);
+#endif
         free(hptr);
     }
 }
