@@ -227,12 +227,6 @@ void wsrep_unload(wsrep_t *hptr)
             hptr->free(hptr);
 #ifndef USE_VALGRIND
         if (hptr->dlh)
-<<<<<<< HEAD
-            dlclose(hptr->dlh);
-#endif
-||||||| merged common ancestors
-            dlclose(hptr->dlh);
-=======
         {
             int err;
             if ((err = dlclose(hptr->dlh)))
@@ -243,7 +237,7 @@ void wsrep_unload(wsrep_t *hptr)
                 logger(WSREP_LOG_WARN, msg);
             }
         }
->>>>>>> cs/master
+#endif
         free(hptr);
     }
 }
