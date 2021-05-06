@@ -227,9 +227,17 @@ void wsrep_unload(wsrep_t *hptr)
             hptr->free(hptr);
 #ifndef USE_VALGRIND
         if (hptr->dlh)
-            dlclose(hptr->dlh);
+        {
+            int err;
+            if ((err = dlclose(hptr->dlh)))
+            {
+                char msg[1024];
+                snprintf(msg, sizeof(msg), "dlclose(): %s", dlerror());
+                msg[sizeof(msg) - 1] = '\0';
+                logger(WSREP_LOG_WARN, msg);
+            }
+        }
 #endif
         free(hptr);
     }
 }
-
