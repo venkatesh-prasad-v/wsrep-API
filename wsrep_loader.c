@@ -225,7 +225,7 @@ void wsrep_unload(wsrep_t *hptr)
     } else {
         if (hptr->free)
             hptr->free(hptr);
-#ifndef USE_VALGRIND
+#if !defined(USE_ASAN) && !defined(USE_VALGRIND)
         if (hptr->dlh)
         {
             int err;
