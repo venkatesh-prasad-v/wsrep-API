@@ -63,7 +63,7 @@ extern "C" {
  *                                                                        *
  **************************************************************************/
 
-#define WSREP_INTERFACE_VERSION "26"
+#define WSREP_INTERFACE_VERSION "26.1"
 
 /*! Empty backend spec */
 #define WSREP_NONE "none"
@@ -595,6 +595,7 @@ typedef int (*wsrep_encrypt_cb_t)
     bool                  last
 );
 
+/* PXC extension of WSREP API starts here */
 /*!
  * @brief different instruments that we want to monitor through PFS.
  */
@@ -722,6 +723,33 @@ typedef wsrep_pfs_instr_cb_t gu_pfs_instr_cb_t;
 typedef void (*wsrep_abort_cb_t)(void);
 
 /*!
+ * @brief a callback to get encryption key identified by keyId from the
+ * keys storage
+ *
+ * @param keyId     key identifying requested key
+ * @param key       if the operation succeeds, the key identified by keyId
+ *
+ * @return          WSREP_CB_SUCCESS if the requested key was found in the
+ *                  keys storage
+ */
+typedef enum wsrep_cb_status (*wsrep_enc_get_key_cb_t)(const wsrep_buf_t* keyId, wsrep_enc_key_t* key);
+
+/*!
+ * @brief a callback to request generation of the new encryption key
+ * which will be identified by keyId
+ *
+ * @param keyId     key identifying requested key
+ *
+ * @return          WSREP_CB_SUCCESS if generation of the new key succeeded.
+ *                  WSREP_CB_FAILURE if generation failed of the key with
+ *                  keyId failed (e.g. there was already a key identified by
+ *                  keyId)
+ */
+typedef enum wsrep_cb_status (*wsrep_enc_new_key_cb_t)(const wsrep_buf_t* keyId);
+
+/* PXC extension of WSREP API ends here */
+
+/*!
  * Initialization parameters for wsrep provider.
  */
 struct wsrep_init_args
@@ -755,6 +783,7 @@ struct wsrep_init_args
     wsrep_sst_donate_cb_t  sst_donate_cb;   //!< donate SST
     wsrep_synced_cb_t      synced_cb;       //!< synced with group
 
+    /* PXC extension of WSREP API starts here */
     /* Abnormal termination callback: */
     wsrep_abort_cb_t       abort_cb;       //!< wsrep provider terminated
                                            //!< abnormally
@@ -763,6 +792,13 @@ struct wsrep_init_args
     Schema infrastructure. Callback help in creating these mutexes in MySQL
     space with needed infrastructure to register them. */
     wsrep_pfs_instr_cb_t   pfs_instr_cb;  //!< register for pfs instrumentation
+
+    /* Return encryption key by name*/
+    wsrep_enc_get_key_cb_t enc_get_key_cb;
+    /* Generate new encryption key */
+    wsrep_enc_new_key_cb_t enc_new_key_cb;
+
+    /* PXC extension of WSREP API ends here */
 };
 
 /*! Type of the stats variable value in struct wsrep_status_var */
@@ -786,6 +822,7 @@ struct wsrep_stats_var
     } value;                   //!< variable value
 };
 
+/* PXC extension of WSREP API starts here */
 /*! Structure to copy-over node information exposed through PFS. */
 #define WSREP_HOSTNAME_LENGTH 64
 #define WSREP_STATUS_LENGTH 64
@@ -806,6 +843,8 @@ typedef struct {
   /* Segment of node */
   uint32_t segment;
 } wsrep_node_info_t;
+
+/* PXC extension of WSREP API ends here */
 
 /*! Key struct used to pass certification keys for transaction handling calls.
  *  A key consists of zero or more key parts. */
@@ -1411,6 +1450,7 @@ struct wsrep_st {
    */
     void (*stats_reset) (wsrep_t* wsrep);
 
+  /* PXC extension of WSREP API starts here */
   /*!
    * @brief Get node information to expose through PFS
    *
@@ -1419,6 +1459,19 @@ struct wsrep_st {
    * @param size      size of array.
    */
     void (*fetch_pfs_info) (wsrep_t* wsrep, wsrep_node_info_t* nodes, uint32_t size);
+
+  /*!
+   * @brief Request GCache Master Key rotation.
+   *
+   * This call informs that client requested rotation of
+   * GCache Master Key. As the result, Galera will use
+   * enc_new_key_cb and enc_get_key_cb to generate new key.
+   *
+   * return success or an error code
+   */
+    wsrep_status_t (*rotate_gcache_key)(wsrep_t* wsrep);
+
+  /* PXC extension of WSREP API ends here */
 
   /*!
    * @brief Pauses writeset applying/committing.

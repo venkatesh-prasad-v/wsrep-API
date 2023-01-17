@@ -353,6 +353,12 @@ static void dummy_fetch_pfs_info (
     WSREP_DBUG_ENTER(w);
 }
 
+static wsrep_status_t dummy_rotate_gcache_key( wsrep_t* w)
+{
+    WSREP_DBUG_ENTER(w);
+    return WSREP_OK;
+}
+
 static wsrep_seqno_t dummy_pause (wsrep_t* w)
 {
     WSREP_DBUG_ENTER(w);
@@ -438,6 +444,7 @@ static wsrep_t dummy_iface = {
     &dummy_stats_free,
     &dummy_stats_reset,
     &dummy_fetch_pfs_info,
+    &dummy_rotate_gcache_key,
     &dummy_pause,
     &dummy_resume,
     &dummy_desync,
